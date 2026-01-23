@@ -1,3 +1,47 @@
+function Get-EventUid {
+    <#
+    .SYNOPSIS
+        Generates a deterministic UID for an event.
+
+    .DESCRIPTION
+        Creates a unique identifier based on email, dates, and event type.
+        Format: <email>|<start ISO>|<end ISO>|<eventType>
+
+    .PARAMETER Email
+        The user's email address.
+
+    .PARAMETER Start
+        The event start datetime.
+
+    .PARAMETER End
+        The event end datetime.
+
+    .PARAMETER Type
+        The event type (e.g., "Holiday", "Training").
+
+    .EXAMPLE
+        $uid = Get-EventUid -Email "user@example.com" -Start $start -End $end -Type "Holiday"
+    #>
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Email,
+
+        [Parameter(Mandatory = $true)]
+        [datetime]$Start,
+
+        [Parameter(Mandatory = $true)]
+        [datetime]$End,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Type
+    )
+
+    $startIso = $Start.ToString("o")
+    $endIso = $End.ToString("o")
+
+    return "$Email|$startIso|$endIso|$Type"
+}
+
 function Build-EventObject {
     <#
     .SYNOPSIS
@@ -110,48 +154,4 @@ function Build-EventObject {
         Write-Error "Event data: $($NormalizedEvent | ConvertTo-Json)"
         throw
     }
-}
-
-function Get-EventUid {
-    <#
-    .SYNOPSIS
-        Generates a deterministic UID for an event.
-
-    .DESCRIPTION
-        Creates a unique identifier based on email, dates, and event type.
-        Format: <email>|<start ISO>|<end ISO>|<eventType>
-
-    .PARAMETER Email
-        The user's email address.
-
-    .PARAMETER Start
-        The event start datetime.
-
-    .PARAMETER End
-        The event end datetime.
-
-    .PARAMETER Type
-        The event type (e.g., "Holiday", "Training").
-
-    .EXAMPLE
-        $uid = Get-EventUid -Email "user@example.com" -Start $start -End $end -Type "Holiday"
-    #>
-    param(
-        [Parameter(Mandatory = $true)]
-        [string]$Email,
-
-        [Parameter(Mandatory = $true)]
-        [datetime]$Start,
-
-        [Parameter(Mandatory = $true)]
-        [datetime]$End,
-
-        [Parameter(Mandatory = $true)]
-        [string]$Type
-    )
-
-    $startIso = $Start.ToString("o")
-    $endIso = $End.ToString("o")
-
-    return "$Email|$startIso|$endIso|$Type"
 }
