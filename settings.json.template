@@ -1,0 +1,10 @@
+{
+  "TenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "ClientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "ClientSecret": "your-secret-here",
+  "PeopleHrApiKey": "your-peoplehr-api-key",
+  "SyncDaysPast": 30,
+  "SyncDaysFuture": 365,
+  "LogDirectory": "./logs",
+  "SkipUsers": []
+}

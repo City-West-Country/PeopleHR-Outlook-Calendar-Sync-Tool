@@ -1,0 +1,21 @@
+# Logs
+logs/
+*.log
+
+# Settings with secrets
+settings.json
+
+# PowerShell temporary files
+*.ps1~
+
+# Windows Service artifacts
+*.exe
+*.dll
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+tmp/
+temp/
