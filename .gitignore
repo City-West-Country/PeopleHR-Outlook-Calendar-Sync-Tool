@@ -1,0 +1,16 @@
+# Secrets — never commit the real settings file.
+settings.json
+
+# Logs (but keep the committed sample)
+logs/*.log
+!logs/sample-sync.log
+
+# PowerShell / editor cruft
+*.psd1.bak
+.vscode/
+.idea/
+*.user
+
+# OS
+Thumbs.db
+.DS_Store

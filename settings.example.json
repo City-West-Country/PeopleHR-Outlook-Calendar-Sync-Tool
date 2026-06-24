@@ -1,0 +1,17 @@
+{
+  "TenantId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "ClientId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "ClientSecret": "set-here-or-via-GRAPH_CLIENT_SECRET-env-var",
+  "PeopleHrApiKey": "set-here-or-via-PEOPLEHR_API_KEY-env-var",
+  "PeopleHrBaseUri": "https://api.peoplehr.net/Query",
+  "PeopleHrAction": "GetQueryResultByQueryName",
+  "HolidayQueryName": "Holiday : Outlook Feed (DO NOT REMOVE)",
+  "OtherEventsQueryName": "Other Events : Outlook Feed (DO NOT REMOVE)",
+  "SyncDaysPast": 30,
+  "SyncDaysFuture": 365,
+  "TimeZone": "GMT Standard Time",
+  "LogDirectory": "./logs",
+  "SkipUsers": [],
+  "WhatIf": false,
+  "VerboseLogging": false
+}

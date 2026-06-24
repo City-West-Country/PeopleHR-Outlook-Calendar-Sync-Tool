@@ -1,0 +1,19 @@
+[2026-06-24 06:30:00] [INFO   ] PeopleHR -> Outlook sync starting. Log: ./logs/sync-2026-06-24.log
+[2026-06-24 06:30:01] [SUCCESS] Acquired Microsoft Graph token (client credentials).
+[2026-06-24 06:30:01] [INFO   ] Fetching PeopleHR holidays (query: 'Holiday : Outlook Feed (DO NOT REMOVE)')...
+[2026-06-24 06:30:09] [SUCCESS] Loaded 265 holiday record(s).
+[2026-06-24 06:30:09] [INFO   ] Fetching PeopleHR other events (query: 'Other Events : Outlook Feed (DO NOT REMOVE)')...
+[2026-06-24 06:30:14] [SUCCESS] Loaded 41 other-event record(s).
+[2026-06-24 06:30:14] [INFO   ] Normalised 304 sync event(s) from PeopleHR feeds.
+[2026-06-24 06:30:14] [INFO   ] Sync window: 2026-05-25 -> 2027-06-24
+[2026-06-24 06:30:14] [INFO   ]   Syncing mailbox: alice@example.com
+[2026-06-24 06:30:15] [SUCCESS]     Created: Annual Leave 2026-07-01 -> 2026-07-03
+[2026-06-24 06:30:15] [SUCCESS]     Updated: Sick 2026-07-10
+[2026-06-24 06:30:16] [INFO   ]   Done alice@example.com: +1 ~1 -0 =6 !0
+[2026-06-24 06:30:16] [INFO   ]   Syncing mailbox: bob@example.com
+[2026-06-24 06:30:17] [SUCCESS]     Created: Training 2026-08-12 09:00 -> 2026-08-12 17:00
+[2026-06-24 06:30:17] [SUCCESS]     Deleted orphaned event: Holiday - PeopleHR Sync [a3f8182d...]
+[2026-06-24 06:30:18] [INFO   ]   Done bob@example.com: +1 ~0 -1 =3 !0
+[2026-06-24 06:30:18] [WARN   ]   Skipping contractor@example.com (in SkipUsers).
+[2026-06-24 06:30:40] [SUCCESS] SUMMARY: 38 mailbox(es) | created 12, updated 4, deleted 3, unchanged 246, errors 0
+[2026-06-24 06:30:40] [SUCCESS] Completed successfully.
