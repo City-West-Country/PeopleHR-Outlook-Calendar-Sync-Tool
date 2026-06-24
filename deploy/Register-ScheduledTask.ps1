@@ -45,8 +45,12 @@ if ($RunAsUser) {
         -User $cred.UserName -Password $cred.GetNetworkCredential().Password -Force | Out-Null
 }
 else {
-    # Run under SYSTEM if no account supplied. NOTE: SYSTEM cannot read user/DPAPI env
-    # vars, so ensure secrets are in settings.json or machine-level environment variables.
+    # Run under SYSTEM if no account supplied.
+    # NOTE: secrets stored in Windows Credential Manager are per-user and are NOT readable
+    # by SYSTEM. If you used Setup.ps1 (Credential Manager), pass -RunAsUser with the account
+    # that stored them instead. SYSTEM only works if secrets come from settings.json or
+    # machine-level environment variables.
+    Write-Warning 'Registering under SYSTEM: Credential Manager secrets are per-user and will NOT be readable. Use -RunAsUser unless your secrets are in settings.json or machine-level env vars.'
     $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
     Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings `
         -Principal $principal -Force | Out-Null

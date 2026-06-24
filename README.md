@@ -75,26 +75,54 @@ Dates are parsed as UK `dd/MM/yyyy` first, then ISO and other common formats.
 
 ## Setup
 
+### Recommended: run the setup wizard
+
 ```powershell
 git clone <repo>
 cd PeopleHR-Outlook-Calendar-Sync-Tool
-
-# 1. Create your settings file from the template
-Copy-Item settings.example.json settings.json
-
-# 2. Fill in TenantId / ClientId and your query names. Leave secrets out of the file
-#    and supply them via environment variables instead (recommended):
-$env:GRAPH_CLIENT_SECRET = '<your-app-client-secret>'
-$env:PEOPLEHR_API_KEY    = '<your-peoplehr-api-key>'
-
-# 3. Dry run — reads everything, writes nothing
-./run.ps1 -WhatIf -VerboseLogging
-
-# 4. Real run
-./run.ps1
+.\Setup.ps1
 ```
 
+`Setup.ps1` walks you through everything:
+
+1. Collects your Entra (Graph) and PeopleHR settings.
+2. **Stores the Graph client secret and PeopleHR API key in Windows Credential Manager** — they never touch `settings.json` or git.
+3. Writes the non-secret values to `settings.json`.
+4. Optionally tests the Graph + PeopleHR connections.
+5. Optionally registers the daily Scheduled Task.
+
+Re-run it any time to change settings or **rotate secrets** — your previous answers are offered as defaults.
+
+> **Credential Manager scoping:** stored secrets are readable only by the Windows account that saved them. Run `Setup.ps1` as the **same account the Scheduled Task will run under** (the wizard defaults the task to the current user for this reason). To use a dedicated service account, log on as (or `runas`) that account and run `Setup.ps1` there.
+
+Then verify with a dry run (reads everything, writes nothing):
+
+```powershell
+.\run.ps1 -WhatIf -VerboseLogging
+.\run.ps1                      # real run
+```
+
+### Manual alternative
+
+If you'd rather not use the wizard, copy `settings.example.json` to `settings.json`, fill in the non-secret values, and provide secrets by either:
+
+- **Credential Manager** (matches the wizard):
+  ```powershell
+  Import-Module .\src\PeopleHrSync.psd1
+  Set-SyncCredential -For ClientSecret -Secret (Read-Host 'Client secret' -AsSecureString)
+  Set-SyncCredential -For ApiKey       -Secret (Read-Host 'PeopleHR API key' -AsSecureString)
+  ```
+- **or environment variables** (override Credential Manager): `GRAPH_CLIENT_SECRET`, `PEOPLEHR_API_KEY`.
+
 `settings.json` is `.gitignore`d so secrets are never committed.
+
+### Where secrets are resolved from
+
+For each secret, the tool uses the first source that has a value:
+
+1. Environment variable (`GRAPH_CLIENT_SECRET` / `PEOPLEHR_API_KEY`) — highest, handy for ad-hoc overrides.
+2. **Windows Credential Manager** (`PeopleHrSync:GraphClientSecret`, `PeopleHrSync:PeopleHrApiKey`).
+3. Plaintext value in `settings.json` — discouraged.
 
 ### Configuration (`settings.json`)
 
@@ -102,8 +130,8 @@ $env:PEOPLEHR_API_KEY    = '<your-peoplehr-api-key>'
 |------------------------|------------------------------------------|-------|
 | `TenantId`             | —                                        | Entra tenant GUID |
 | `ClientId`             | —                                        | App registration (client) ID |
-| `ClientSecret`         | — (or `GRAPH_CLIENT_SECRET` env)         | App client secret |
-| `PeopleHrApiKey`       | — (or `PEOPLEHR_API_KEY` env)            | PeopleHR API key |
+| `ClientSecret`         | *(blank — use Credential Manager)*       | App client secret. Prefer Credential Manager / `GRAPH_CLIENT_SECRET`; leave blank in the file. |
+| `PeopleHrApiKey`       | *(blank — use Credential Manager)*       | PeopleHR API key. Prefer Credential Manager / `PEOPLEHR_API_KEY`; leave blank in the file. |
 | `PeopleHrBaseUri`      | `https://api.peoplehr.net/Query`         | Query endpoint |
 | `PeopleHrAction`       | `GetQueryResultByQueryName`              | API action |
 | `HolidayQueryName`     | `Holiday : Outlook Feed (DO NOT REMOVE)` | Saved query name |
@@ -116,7 +144,7 @@ $env:PEOPLEHR_API_KEY    = '<your-peoplehr-api-key>'
 | `WhatIf`               | `false`                                  | Mock mode (no Graph writes) |
 | `VerboseLogging`       | `false`                                  | Per-event DEBUG lines |
 
-Environment variables override the file; CLI switches (`-WhatIf`, `-VerboseLogging`) override both.
+Secrets resolve in the order described above; CLI switches (`-WhatIf`, `-VerboseLogging`) override the file.
 
 ---
 
@@ -125,10 +153,11 @@ Environment variables override the file; CLI switches (`-WhatIf`, `-VerboseLoggi
 ```
 src/
   PeopleHrSync.psd1 / .psm1     Module manifest + loader (dot-sources everything below)
-  Common/                       Config, logging, constants, hashing
+  Common/                       Config, logging, constants, hashing, Credential Manager store
   PeopleHr/                     Query API + holiday/other-event fetchers
   Graph/                        Auth, throttle/pagination-aware request wrapper, CRUD
   Processing/                   Normalisers, UID, payload builder, per-user reconcile, orchestrator
+Setup.ps1                       Interactive setup wizard (secrets -> Credential Manager)
 run.ps1                         Entry point
 settings.example.json           Config template (copy to settings.json)
 tests/                          Pester v5 tests
@@ -226,6 +255,7 @@ A complete sample is in `logs/sample-sync.log`.
 
 ## Security notes
 
-- Keep `settings.json` out of git (it already is) and prefer machine-level environment variables for `ClientSecret` and `PeopleHrApiKey`. If you must store them in `settings.json`, restrict it with NTFS permissions (see the scheduling section).
+- Secrets are stored in **Windows Credential Manager** (per-user, `CRED_PERSIST_LOCAL_MACHINE`) by the setup wizard — not in `settings.json`. `settings.json` is also git-ignored. If you ever put a secret in the file directly, restrict it with NTFS permissions (see the scheduling section).
+- Credential Manager entries are readable only by the account that stored them, so run `Setup.ps1` as the same account the Scheduled Task uses.
 - The app uses **application** permissions, so it can read/write **any** mailbox in the tenant. Scope it down with an [application access policy](https://learn.microsoft.com/graph/auth-limit-mailbox-access) to only the mailboxes you sync.
-- Rotate the client secret regularly and update the stored value (env var or `settings.json`) when you do.
+- Rotate the client secret regularly — just re-run `Setup.ps1` (or `Set-SyncCredential -For ClientSecret ...`) to update the stored value.

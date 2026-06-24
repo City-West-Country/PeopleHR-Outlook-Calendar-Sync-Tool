@@ -62,15 +62,23 @@ function Get-SyncConfig {
         }
     }
 
-    # Environment variable overrides for secrets.
-    if ($env:GRAPH_CLIENT_SECRET) { $config['ClientSecret']   = $env:GRAPH_CLIENT_SECRET }
-    if ($env:PEOPLEHR_API_KEY)    { $config['PeopleHrApiKey']  = $env:PEOPLEHR_API_KEY }
+    # Secret resolution, lowest precedence first:
+    #   1. value in settings.json (discouraged)
+    #   2. Windows Credential Manager (set via Setup.ps1 / Set-SyncCredential)
+    #   3. environment variable (highest, useful for ad-hoc/override)
+    $credSecret = Get-SyncCredential -For ClientSecret
+    if ($credSecret)              { $config['ClientSecret']  = $credSecret }
+    if ($env:GRAPH_CLIENT_SECRET) { $config['ClientSecret']  = $env:GRAPH_CLIENT_SECRET }
+
+    $credApiKey = Get-SyncCredential -For ApiKey
+    if ($credApiKey)              { $config['PeopleHrApiKey'] = $credApiKey }
+    if ($env:PEOPLEHR_API_KEY)    { $config['PeopleHrApiKey'] = $env:PEOPLEHR_API_KEY }
 
     # Validate required fields.
     $required = 'TenantId', 'ClientId', 'ClientSecret', 'PeopleHrApiKey'
     $missing = $required | Where-Object { [string]::IsNullOrWhiteSpace($config[$_]) }
     if ($missing) {
-        throw "Missing required settings: $($missing -join ', '). Set them in $Path or via environment variables."
+        throw "Missing required settings: $($missing -join ', '). Run .\Setup.ps1 to configure them (secrets are stored in Windows Credential Manager), or set them in $Path / environment variables."
     }
 
     # Resolve LogDirectory relative to repo root.

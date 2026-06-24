@@ -121,6 +121,30 @@ Describe 'ConvertTo-SyncHoliday' {
     }
 }
 
+Describe 'Credential store (Windows Credential Manager)' -Skip:(-not $IsWindows -and $PSVersionTable.PSVersion.Major -ge 6) {
+    # Uses a throwaway target via the native class so real secrets are never touched.
+    BeforeAll { $target = 'PeopleHrSyncTest:unit-' + $PID }
+    AfterAll  { try { [void][PhrCredentialStore]::Delete($target) } catch { } }
+
+    It 'round-trips a secret including unicode and special characters' {
+        $secret = 'sk-Ünïcode-!@#$%^&*()_+ 12345'
+        [PhrCredentialStore]::Write($target, 'unit', $secret)
+        [PhrCredentialStore]::Read($target) | Should -Be $secret
+    }
+    It 'returns $null for a missing target' {
+        [PhrCredentialStore]::Read('PeopleHrSyncTest:does-not-exist-' + $PID) | Should -BeNullOrEmpty
+    }
+    It 'deletes a stored secret' {
+        [PhrCredentialStore]::Write($target, 'unit', 'temp')
+        [PhrCredentialStore]::Delete($target) | Should -BeTrue
+        [PhrCredentialStore]::Read($target) | Should -BeNullOrEmpty
+    }
+    It 'maps logical names to stable target strings' {
+        Get-SyncCredentialTarget -For ClientSecret | Should -Be 'PeopleHrSync:GraphClientSecret'
+        Get-SyncCredentialTarget -For ApiKey       | Should -Be 'PeopleHrSync:PeopleHrApiKey'
+    }
+}
+
 Describe 'ConvertTo-SyncOtherEvent' {
     It 'creates a timed event when start/end times are present' {
         $row = [pscustomobject]@{
